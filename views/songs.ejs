@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Songs</title>
+    <style>
+       .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        h1 {
+            margin: 20px 0;
+            font-size: 24px;
+            color: #007bff;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        li.selected {
+            background-color: #d3e4f7;
+        }
+
+        strong {
+            font-size: 18px;
+            color: #333;
+        }
+
+        audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .song-options-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .song-options-form label {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .song-options-form input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        span {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        #prev, #next {
+            margin: 20px;
+        }
+
+        #list {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+        #created{
+            position: fixed;
+            top: 10px;
+            left: 10px;
+
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .modal button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal button:hover {
+            background-color: #0056b3;
+        }
+        #playlistContainer {
+            margin-top: 20px;
+        }
+
+        .playlist-item {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .playlist-item h3 {
+            margin-bottom: 10px;
+        }
+
+        .playlist-item ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .playlist-item ul li {
+            margin-bottom: 5px;
+        }
+
+        .playlist-song {
+            margin-bottom: 10px;
+        }
+        .party-mode-indicator {
+            display: none; 
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50; 
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+  
+<button id="fetchNotificationsBtn">Fetch Notifications</button>
+<div id="notificationsContainer"></div>
+<div id="playlistModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Enter Playlist Name</h2>
+        <input type="text" id="user1PlaylistName" placeholder="User 1 Playlist Name">
+        <input type="text" id="user2PlaylistName" placeholder="User 2 Playlist Name">
+        <button id="savePlaylists">Save</button>
+    </div>
+</div>
+
+    <button id="req">Requests</button>
+    <div id="requests-container"></div>
+
+    <button id="friends">Show Friends</button>
+    <div id="friends-container"></div>
+
+    <% if (typeof isartist !== 'undefined' && isartist) { %>
+        <button id="uploadButton">Upload Song</button>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const upload = document.getElementById('uploadButton');
+                upload.addEventListener('click', function() {
+                    window.location.href = '/artist/upload';
+                });
+            });
+        </script>
+    <% } %>
+
+    <form id="searchForm" action="/search" method="get">
+        <input type="text" name="query" id="searchInput" placeholder="Search for a song..." required>
+        <button type="submit" id="searchButton">Search Music</button>
+    </form>
+    
+    <script>
+        
+
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+    
+        searchButton.addEventListener('click', function(event) {
+            event.preventDefault(); 
+    
+            if (searchButton.textContent === 'Search Music') {
+                searchForm.action = '/search'; 
+                searchForm.submit(); 
+            } else {
+                searchForm.action = '/searchuser'; 
+                searchForm.submit(); 
+            }
+        });
+    
+        
+        searchInput.addEventListener('focus', function() {
+            if (searchButton.textContent === 'Search Music') {
+                searchButton.textContent = 'Search Users';
+                searchInput.placeholder = 'Search for users...';
+            } else {
+                searchButton.textContent = 'Search Music';
+                searchInput.placeholder = 'Search for a song...';
+            }
+        });
+    </script>
+    
+
+    <h1>List of Songs</h1>
+    <ul>
+        <% songs.forEach((song, index) => { %>
+            <li data-song-id="<%= song._id %>">
+                <strong><%= song.name %></strong> by <%= song.artist %>
+                <audio controls class="custom-audio" id="audio_<%= index %>">
+                    <source src="/audio/<%= song._id %>" type="audio/mp3">
+                    Your browser does not support the audio element.
+                </audio>
+                <div>
+                    <form action="/submit-options" method="post" class="song-options-form">
+                        <input type="hidden" name="songId" value="<%= song._id %>">
+                        <label for="option1">Like:</label>
+                        <input type="checkbox" name="option1" value="1" <% if (likedSongs.includes(song._id.toString())) { %>checked<% } %>>
+                        <label for="option2">Dislike:</label>
+                        <input type="checkbox" name="option2" value="1" <% if (dislikedSongs.includes(song._id.toString())) { %>checked<% } %>>
+                    </form>
+                    <span>Likes: <%= song.likes %>, Dislikes: <%= song.dislikes %></span>
+                </div>
+            </li>
+        <% }); %>
+    </ul>
+
+    <button id="prev">Previous</button>
+    <button id="next">Next</button>
+    <button id="list">Playlist</button>
+    <button id="created">created Playlists</button>
+    <div id="playlistContainer"></div>
+   
+
+
+    
+  
+    <script>
+        
+         const friendsButton = document.getElementById("friends");
+        const friendsContainer = document.getElementById("friends-container");
+        const partybutton=document.getElementById('pm');
+        const partycontainer=document.getElementById("party-container");
+ 
+        const modal = document.getElementById("playlistModal");
+const spanClose = document.getElementsByClassName("close")[0];
+const btnSavePlaylists = document.getElementById("savePlaylists");
+
+// Close the modal when the '×' button is clicked
+spanClose.addEventListener("click", function() {
+    modal.style.display = "none";
+});
+
+// Close the modal when clicking outside of it
+window.addEventListener("click", function(event) {
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+});
+document.getElementById('fetchNotificationsBtn').addEventListener('click', async () => {
+    try {
+        // Make a fetch request to your backend endpoint
+        const response = await fetch('/api/user/notifications', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // Include any necessary authentication headers if required
+            },
+        });
+
+        // Parse JSON response
+        const data = await response.json();
+
+        // Handle response data (assuming data is an array of notifications)
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        notificationsContainer.innerHTML = ''; // Clear previous content
+
+        if (data.success) {
+            // Iterate through notifications and display them
+            data.notifications.forEach(notification => {
+                // Create elements for notification message and accept button
+                const notificationElement = document.createElement('div');
+                const messageElement = document.createElement('span');
+                const acceptButton = document.createElement('button');
+
+                // Set text content and attributes for accept button
+                messageElement.textContent = notification.message;
+                acceptButton.textContent = 'Accept';
+                acceptButton.addEventListener('click', async () => {
+                    acceptButton.remove();
+                    messageElement.textContent = 'Click a playlist';
+                    // You can add logic here to perform further actions on accept button click
+                    // such as sending a request to the backend
+                });
+
+                // Append elements to notification element
+                notificationElement.appendChild(messageElement);
+                notificationElement.appendChild(acceptButton);
+
+                // Append notification element to container
+                notificationsContainer.appendChild(notificationElement);
+            });
+        } else {
+            // Handle error or display a message if no notifications
+            notificationsContainer.textContent = 'No notifications found';
+        }
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+});
+
+friendsButton.addEventListener('click', function() {
+            fetch('/api/friends')
+                .then(response => response.json())
+                .then(data => {
+                    friendsContainer.innerHTML = '';
+                    if (data.friends.length > 0) {
+                        data.friends.forEach(friend => {
+                            const friendDiv = document.createElement('div');
+                            const party=document.createElement('button');
+                            party.textContent="Party Mode";
+                            friendDiv.textContent = `Friend: ${friend}`;
+                            console.log(friendDiv.textContent);
+                            friendDiv.append(party);
+                            friendsContainer.appendChild(friendDiv);
+                            party.addEventListener('click',function(){
+                                partymode(friend);
+                            })
+
+                        });
+                    } else {
+                        friendsContainer.textContent = 'No friends found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching friends:', error);
+                });
+        });
+
+        let buttonClicked=false;
+        const requestButton = document.getElementById("req");
+        const requestsContainer = document.getElementById("requests-container");
+        requestButton.addEventListener('click', function() {
+            fetch('/api/friend-requests')
+                .then(response => response.json())
+                .then(data => {
+                    requestsContainer.innerHTML = '';
+                    if (data.usernames.length > 0 ) {
+                        data.usernames.forEach(username => {
+                            const userDiv = document.createElement('div');
+                            const accept=document.createElement('button');
+                            const party=document.createElement('button');
+                            accept.textContent="Accept";
+                            userDiv.textContent = `Username: ${username}`
+                            userDiv.appendChild(accept);
+                            requestsContainer.appendChild(userDiv);
+                            accept.addEventListener('click', function() {
+                                if(!buttonClicked){
+                                console.log(username);
+                                acceptFriendRequest(username);
+                                buttonClicked=true;
+                                data.usernames = data.usernames.filter(username);
+                                console.log(data.usernames);
+                                }
+                            });
+
+                        });
+                    } else {
+                        requestsContainer.textContent = 'No friend requests found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching friend requests:', error);
+                });
+        });
+        function partymode(friend) {
+    console.log(friend);
+    fetch('/api/party-mode', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ friend })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Party Mode alert sent to ${friend}.`);
+        } else {
+            alert(`Failed to send Party Mode alert to ${friend}.`);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending Party Mode alert:', error);
+    });
+}
+        
+        
+        
+        function acceptFriendRequest(username) {
+            fetch('/api/accept-friend-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Friend request from ${username} accepted.`);
+                    requestButton.click();
+                } else {
+                    alert(`Failed to accept friend request from ${username}.`);
+                }
+            })
+            .catch(error => {
+                console.error('Error accepting friend request:', error);
+            });
+        }
+       
+        document.addEventListener("DOMContentLoaded", function() {
+           
+            
+    
+            const audios = document.querySelectorAll(".custom-audio");
+            let currentIndex = null;
+            let selectionMode = false;
+            const selectedSongs = new Set();
+
+            function playAudio(index) {
+                if (index >= 0 && index < audios.length) {
+                    if (currentIndex !== null && currentIndex !== index) {
+                        audios[currentIndex].pause();
+                        audios[currentIndex].currentTime = 0;
+                    }
+                    audios[index].play();
+                    currentIndex = index;
+                } else {
+                    currentIndex = null;
+                }
+            }
+
+            document.getElementById("next").addEventListener("click", function() {
+                if (currentIndex !== null) {
+                    const nextIndex = (currentIndex + 1) % audios.length;
+                    playAudio(nextIndex);
+                } else {
+                    playAudio(0); 
+                }
+            });
+
+            document.getElementById("prev").addEventListener("click", function() {
+                if (currentIndex !== null) {
+                    const prevIndex = (currentIndex - 1 + audios.length) % audios.length;
+                    playAudio(prevIndex);
+                } else {
+                    playAudio(0); 
+                }
+            });
+
+            audios.forEach((audio, index) => {
+                audio.addEventListener("play", () => {
+                    currentIndex = index;
+                    audios.forEach((otherAudio, otherIndex) => {
+                        if (otherIndex !== index) {
+                            otherAudio.pause();
+                            otherAudio.currentTime = 0;
+                        }
+                    });
+                });
+
+                audio.addEventListener("pause", () => {
+                    if (currentIndex === index) {
+                        currentIndex = null;
+                    }
+                });
+
+                audio.addEventListener("ended", () => {
+                    const nextIndex = (index + 1) % audios.length;
+                    playAudio(nextIndex);
+                });
+
+                audio.addEventListener("error", (e) => {
+                    console.log(`Error occurred in Audio ${index}`, e);
+                });
+            });
+
+           
+        
+        document.querySelectorAll('.song-options-form input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', async (event) => {
+        const form = event.target.closest('form');
+        const formData = new FormData(form);
+        const songId = formData.get('songId');
+        const option1 = formData.get('option1') || '0';
+        const option2 = formData.get('option2') || '0';
+
+        try {
+            const response = await fetch('/submit-options', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ songId, option1, option2 })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update song');
+            }
+
+            const data = await response.json();
+            console.log(data); // Log the updated likes/dislikes
+            // Optionally update UI with updated likes/dislikes
+        } catch (error) {
+            console.error('Error:', error);
+            // Handle error scenario
+        }
+    });
+});
+
+        
+        const modal = document.getElementById("playlistModal");
+const btnPlaylist = document.getElementById("list");
+const spanClose = document.getElementsByClassName("close")[0];
+const btnSavePlaylist = document.getElementById("savePlaylist");
+const created=document.getElementById("created");
+
+
+btnPlaylist.addEventListener("click", function() {
+    selectionMode = !selectionMode;
+    if (selectionMode) {
+        this.textContent = "Done";
+    } else {
+        this.textContent = "Playlist";
+        // Open the modal to enter playlist name
+        modal.style.display = "block";
+    }
+});
+
+
+spanClose.addEventListener("click", function() {
+    modal.style.display = "none";
+});
+
+btnSavePlaylist.addEventListener("click", async function() {
+    const playlistName = document.getElementById("playlistName").value;
+    console.log("Playlist Name:", playlistName);
+
+    // Prepare data to send to the server
+    const playlistData = {
+        playlistName: playlistName,
+        selectedSongs: Array.from(selectedSongs)
+    };
+    console.log(playlistData);
+
+    try {
+        const response = await fetch('/save-playlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(playlistData)
+        });
+        console.log(body);
+
+        if (!response.ok) {
+            throw new Error('Failed to save playlist');
+        }
+
+        const data = await response.json();
+        console.log('Playlist saved successfully:', data);
+        // Optionally update UI or perform other actions upon successful save
+    } catch (error) {
+        console.error('Error saving playlist:', error);
+        // Handle error scenario
+    }
+
+    modal.style.display = "none";
+    // Clear selected songs or reset state as needed
+    selectedSongs.clear();
+    selectionMode = false;
+    btnPlaylist.textContent = "Playlist"; // Reset button text
+});
+
+document.getElementById("created").addEventListener("click", async function() {
+    let totalDuration = 0; // Initialize total duration accumulator
+
+    try {
+        console.log('Fetching playlists...'); // Log before fetching
+
+        const response = await fetch('/playlists', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch playlists');
+        }
+
+        const playlists = await response.json();
+        console.log('Fetched playlists:', playlists); // Log fetched playlists
+
+        // Display playlists on the page
+        const playlistContainer = document.getElementById("playlistContainer");
+        playlistContainer.innerHTML = ''; // Clear any existing playlists
+
+        playlists.forEach(playlist => {
+            console.log(playlist);
+
+            const playlistItem = document.createElement("div");
+            playlistItem.classList.add("playlist-item");
+            playlistItem.innerHTML = `
+                <h3>${playlist.name}</h3>
+                <button class="view-songs" data-playlist-id="${playlist._id}">View Songs</button>
+                <ul class="songs-list" style="display: none;"></ul>
+                <p>Total Duration: <span id="total-duration-${playlist._id}">--:--</span></p>
+            `;
+            playlistContainer.appendChild(playlistItem);
+
+            // Add event listener to the "View Songs" button
+            playlistItem.querySelector('.view-songs').addEventListener('click', async function() {
+                const songsList = playlistItem.querySelector('.songs-list');
+                const playlistId = this.getAttribute('data-playlist-id');
+
+                if (songsList.style.display === 'none') {
+                    // Fetch and display songs
+                    try {
+                        const response = await fetch(`/playlists/${playlistId}/songs`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch songs for playlist');
+                        }
+
+                        const songs = await response.json();
+                        console.log('Fetched songs:', songs); // Log fetched songs
+
+                        // Clear any existing songs
+                        songsList.innerHTML = '';
+
+                        // Display fetched songs
+                        songs.forEach(song => {
+                            const songItem = document.createElement('li');
+                            songItem.classList.add('playlist-song');
+                            songItem.innerHTML = `
+                                <strong>${song.name}</strong> by ${song.artist}<br>
+                                <audio controls>
+                                    <source src="/audio/${song._id}" type="audio/mp3">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                <p>Duration: <span id="duration-${song._id}">--:--</span></p>
+                                <hr>
+                            `;
+                            songsList.appendChild(songItem);
+
+                            // Get elements for duration display
+                            const audioElement = songItem.querySelector('audio');
+                            const durationDisplay = songItem.querySelector(`#duration-${song._id}`);
+
+                            // Calculate and display duration when metadata is loaded
+                            audioElement.addEventListener('loadedmetadata', function() {
+                                const durationMinutes = Math.floor(audioElement.duration / 60);
+                                const durationSeconds = Math.floor(audioElement.duration % 60);
+                                const formattedDuration = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+                                durationDisplay.textContent = formattedDuration;
+
+                                // Accumulate total duration
+                                totalDuration += audioElement.duration;
+                                
+                                // Update total duration display
+                                const totalDurationDisplay = playlistItem.querySelector(`#total-duration-${playlist._id}`);
+                                const totalDurationMinutes = Math.floor(totalDuration / 60);
+                                const totalDurationSeconds = Math.floor(totalDuration % 60);
+                                const formattedTotalDuration = `${totalDurationMinutes}:${totalDurationSeconds.toString().padStart(2, '0')}`;
+                                totalDurationDisplay.textContent = formattedTotalDuration;
+                            });
+                        });
+
+                        songsList.style.display = 'block';
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                } else {
+                    songsList.style.display = 'none';
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+
+
+function calculateDurationInSeconds(durationString) {
+   
+    const parts = durationString.split(':');
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    return minutes * 60 + seconds;
+}
+
+function formatDuration(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+window.addEventListener("click", function(event) {
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+});
+document.querySelectorAll("li[data-song-id]").forEach(item => {
+    item.addEventListener("click", function() {
+        if (selectionMode) {
+            const songId = this.getAttribute("data-song-id");
+            if (selectedSongs.has(songId)) {
+                selectedSongs.delete(songId);
+                this.classList.remove("selected");
+            } else {
+                selectedSongs.add(songId);
+                this.classList.add("selected");
+            }
+        }
+    });
+});
+
+});
+</script>
+

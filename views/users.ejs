@@ -1,0 +1,33 @@
+<!-- users.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Search</title>
+</head>
+<body>
+    <h1>User Search</h1>
+    <form action="/searchuser" method="get">
+        <label for="searchInput">Search Users:</label>
+        <input type="text" id="searchInput" name="query" placeholder="Enter user name...">
+        <button type="submit">Search</button>
+    </form>
+
+    <div>
+        <% if (users.length > 0) { %>
+            <h2>Search Results:</h2>
+            <ul>
+                <% users.forEach(user => { %>
+                    <li>
+                        <%= user.name %>
+                        <a href="/sendrequest/<%= user._id %>" class="send-request-btn">Send Request</a>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else if (query) { %>
+            <p>No users found matching "<%= query %>".</p>
+        <% } %>
+    </div>
+</body>
+</html>

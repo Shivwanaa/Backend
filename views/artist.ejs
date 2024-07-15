@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Music</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Upload Music</h2>
+        <% if (message) { %>
+            <p class="success"><%= message %></p>
+        <% } %>
+        <form action="/artist/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="musicNameArtist">Music Name Artist :</label>
+                <input type="text" id="musicNameArtist" name="musicNameArtist" placeholder="Enter music name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="musicName">Music Name:</label>
+                <input type="text" id="musicName" name="musicName" placeholder="Enter music name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="musicFile">Music File:</label>
+                <input type="file" id="musicFile" name="musicFile" required>
+            </div>
+            
+            <button type="submit" class="submit-btn">Upload</button>
+        </form>
+    </div>
+</body>
+</html>

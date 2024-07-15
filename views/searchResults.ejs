@@ -1,0 +1,31 @@
+<!-- searchResults.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Search Results</title>
+</head>
+<body>
+    <h1>User Search Results</h1>
+
+    <% if (users.length > 0) { %>
+        <h2>Users found for "<%= query %>":</h2>
+        <ul>
+            <% users.forEach(user => { %>
+                <li>
+                    <strong>Name:</strong> <%= user.name %><br>
+                    <form action="/sendrequest/<%= user._id %>" method="post">
+                        <textarea name="message" rows="4" cols="50" placeholder="Enter your message..."></textarea><br>
+                        <button type="submit">Send Request</button>
+                    </form>
+                </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No users found for "<%= query %>".</p>
+    <% } %>
+
+    
+</body>
+</html>
