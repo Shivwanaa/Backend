@@ -5,40 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Songs</title>
     <style>
-       .modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgb(0,0,0);
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
+      
         body {
             font-family: Arial, sans-serif;
             background: #f0f2f5;
@@ -262,14 +229,13 @@
 <button id="fetchNotificationsBtn">Fetch Notifications</button>
 <div id="notificationsContainer"></div>
 <div id="playlistModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Enter Playlist Name</h2>
-        <input type="text" id="user1PlaylistName" placeholder="User 1 Playlist Name">
-        <input type="text" id="user2PlaylistName" placeholder="User 2 Playlist Name">
-        <button id="savePlaylists">Save</button>
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Enter Playlist Name</h2>
+            <input type="text" id="playlistName" placeholder="Playlist Name">
+            <button id="savePlaylist">Save</button>
+        </div>
     </div>
-</div>
 
     <button id="req">Requests</button>
     <div id="requests-container"></div>
@@ -352,6 +318,7 @@
     <button id="prev">Previous</button>
     <button id="next">Next</button>
     <button id="list">Playlist</button>
+
     <button id="created">created Playlists</button>
     <div id="playlistContainer"></div>
    
@@ -366,21 +333,7 @@
         const partybutton=document.getElementById('pm');
         const partycontainer=document.getElementById("party-container");
  
-        const modal = document.getElementById("playlistModal");
-const spanClose = document.getElementsByClassName("close")[0];
-const btnSavePlaylists = document.getElementById("savePlaylists");
-
-// Close the modal when the '×' button is clicked
-spanClose.addEventListener("click", function() {
-    modal.style.display = "none";
-});
-
-// Close the modal when clicking outside of it
-window.addEventListener("click", function(event) {
-    if (event.target === modal) {
-        modal.style.display = "none";
-    }
-});
+       
 document.getElementById('fetchNotificationsBtn').addEventListener('click', async () => {
     try {
         // Make a fetch request to your backend endpoint
@@ -619,6 +572,11 @@ friendsButton.addEventListener('click', function() {
         const songId = formData.get('songId');
         const option1 = formData.get('option1') || '0';
         const option2 = formData.get('option2') || '0';
+        console.log(songId);
+        console.log(option1);
+        console.log(option2);
+        
+
 
         try {
             const response = await fetch('/submit-options', {
@@ -859,4 +817,3 @@ document.querySelectorAll("li[data-song-id]").forEach(item => {
 
 });
 </script>
-

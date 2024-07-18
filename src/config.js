@@ -20,6 +20,10 @@ async function connectToDatabase() {
 }
 
 connectToDatabase();
+const PartyModeSchema = new mongoose.Schema({
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  pmode: { type: Boolean, default: false }
+});
 const LoginSchema=({
     name:{
         type:String,
@@ -50,10 +54,7 @@ const LoginSchema=({
         required:false,
 
     },
-    partymode: [{
-        sender:{ type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        pmode:{ type: Boolean, default: false },
-     }],
+    partymode: [PartyModeSchema],
      notifications: [{
         sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         message: String,
@@ -63,5 +64,4 @@ const LoginSchema=({
 });
 const collections=new mongoose.model("users",LoginSchema);
 module.exports=collections;
-
 

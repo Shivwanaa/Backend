@@ -92,6 +92,10 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .catch(err => {
         console.error('Error connecting to MongoDB:', err);
     });
+    const PartyModeSchema = new mongoose.Schema({
+        sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        pmode: { type: Boolean, default: false }
+      });
 
 const userSchema = new mongoose.Schema({
     name: String,
@@ -105,10 +109,7 @@ const userSchema = new mongoose.Schema({
         createdAt: { type: Date, default: Date.now }
     }],
      friends:[String],
-     partymode: [{
-        sender:{ type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        pmode:{ type: Boolean, default: false },
-     }],
+     partymode: [PartyModeSchema],
      notifications: [{
         sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         message: String,
@@ -341,30 +342,30 @@ app.get('/api/friends', isAuthenticated, async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
-// app.post('/api/party-mode', isAuthenticated, async (req, res) => {
-//     try {
-//         const { friend } = req.body;
-//         console.log("plsssssssssssssss");
-//         console.log(req.body);
-//         const userId = req.session.user._id;
-//         const user = await User.findById(userId).exec();
-//         console.log(user);
-//         const friendUser = await User.findOne({ name:friend}).exec();
-//         console.log(friendUser);
+app.post('/api/party-mode', isAuthenticated, async (req, res) => {
+    try {
+        const { friend } = req.body;
+        console.log("plsssssssssssssss");
+        console.log(req.body);
+        const userId = req.session.user._id;
+        const user = await User.findById(userId).exec();
+        console.log(user);
+        const friendUser = await User.findOne({ name:friend}).exec();
+        console.log(friendUser);
 
-//         if (!user || !friendUser) {
-//             return res.status(404).json({ success: false, message: 'User or friend not found' });
-//         }
-//         const friendUserid = await User.findOne({ name: friend }).select('_id').exec();
+        if (!user || !friendUser) {
+            return res.status(404).json({ success: false, message: 'User or friend not found' });
+        }
+        const friendUserid = await User.findOne({ name: friend }).select('_id').exec();
 
-//         user.partymode.push({ sender: friendUserid, pmode: true });
-//         friendUser.partymode.push({ sender: userId, pmode: true });
-//         res.json({ success: true, message: 'Party Mode notification sent to friend' });
-//     } catch (error) {
-//         console.error('Error sending Party Mode notification:', error);
-//         res.status(500).json({ success: false, message: 'Internal server error' });
-//     }
-// });
+        user.partymode.push({ sender: friendUserid, pmode: true });
+        friendUser.partymode.push({ sender: userId, pmode: true });
+        res.json({ success: true, message: 'Party Mode notification sent to friend' });
+    } catch (error) {
+        console.error('Error sending Party Mode notification:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
 // app.post('/api/party-mode', isAuthenticated, async (req, res) => {
 //     try {
 //         const { friend } = req.body;
@@ -419,56 +420,58 @@ app.get('/api/friends', isAuthenticated, async (req, res) => {
 //         res.status(500).json({ success: false, message: 'Internal server error' });
 //     }
 // });
-app.post('/api/party-mode', isAuthenticated, async (req, res) => {
-    try {
-        const { friend } = req.body;
-        const userId = req.session.user._id;
 
-        const user = await User.findById(userId).exec();
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
 
-        const friendUser = await User.findOne({ name: friend }).exec();
-        if (!friendUser) {
-            return res.status(404).json({ success: false, message: 'Friend not found' });
-        }
+// app.post('/api/party-mode', isAuthenticated, async (req, res) => {
+//     try {
+//         const { friend } = req.body;
+//         const userId = req.session.user._id;
 
-        const friendUserId = friendUser._id;
+//         const user = await User.findById(userId).exec();
+//         if (!user) {
+//             return res.status(404).json({ success: false, message: 'User not found' });
+//         }
 
-        const userPartyModeIndex = user.partymode.findIndex(pm => pm.sender.equals(friendUserId));
-        const friendPartyModeIndex = friendUser.partymode.findIndex(pm => pm.sender.equals(userId));
+//         const friendUser = await User.findOne({ name: friend }).exec();
+//         if (!friendUser) {
+//             return res.status(404).json({ success: false, message: 'Friend not found' });
+//         }
 
-        if (userPartyModeIndex !== -1) {
-            user.partymode[userPartyModeIndex].pmode = !user.partymode[userPartyModeIndex].pmode;
-        } else {
-            user.partymode.push({ sender: friendUserId, pmode: true });
-        }
+//         const friendUserId = friendUser._id;
 
-        if (friendPartyModeIndex !== -1) {
-            friendUser.partymode[friendPartyModeIndex].pmode = !friendUser.partymode[friendPartyModeIndex].pmode;
-        } else {
-            friendUser.partymode.push({ sender: userId, pmode: true });
-        }
+//         const userPartyModeIndex = user.partymode.findIndex(pm => pm.sender.equals(friendUserId));
+//         const friendPartyModeIndex = friendUser.partymode.findIndex(pm => pm.sender.equals(userId));
 
-        await user.save();
-        await friendUser.save();
+//         if (userPartyModeIndex !== -1) {
+//             user.partymode[userPartyModeIndex].pmode = !user.partymode[userPartyModeIndex].pmode;
+//         } else {
+//             user.partymode.push({ sender: friendUserId, pmode: true });
+//         }
 
-        const notificationMessage = `${user.name} has requested Party Mode.`;
-        friendUser.notifications.push({
-            sender: userId,
-            message: notificationMessage,
-            type: 'party-mode-request'
-        });
+//         if (friendPartyModeIndex !== -1) {
+//             friendUser.partymode[friendPartyModeIndex].pmode = !friendUser.partymode[friendPartyModeIndex].pmode;
+//         } else {
+//             friendUser.partymode.push({ sender: userId, pmode: true });
+//         }
 
-        await friendUser.save();
+//         await user.save();
+//         await friendUser.save();
 
-        res.json({ success: true, message: 'Party Mode updated successfully' });
-    } catch (error) {
-        console.error('Error updating Party Mode:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-});
+//         const notificationMessage = `${user.name} has requested Party Mode.`;
+//         friendUser.notifications.push({
+//             sender: userId,
+//             message: notificationMessage,
+//             type: 'party-mode-request'
+//         });
+
+//         await friendUser.save();
+
+//         res.json({ success: true, message: 'Party Mode updated successfully' });
+//     } catch (error) {
+//         console.error('Error updating Party Mode:', error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+//     }
+// });
 
 // Backend endpoint to fetch notifications
 app.get('/api/user/notifications', isAuthenticated, async (req, res) => {
@@ -567,6 +570,23 @@ app.get('/searchuser', isAuthenticated, async (req, res) => {
     }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.post('/save-playlist', isAuthenticated, async (req, res) => {
     const name = req.body.playlistName;
     const songs=req.body.selectedSongs
@@ -593,7 +613,6 @@ app.post('/save-playlist', isAuthenticated, async (req, res) => {
     }
      
 });
-
 
 app.get('/playlists', isAuthenticated, async (req, res) => {
     const userId = req.session.user._id;
@@ -647,14 +666,18 @@ app.get('/playlists/:id/songs', isAuthenticated, async (req, res) => {
 
 app.post('/submit-options', async (req, res) => {
     const { songId, option1, option2 } = req.body;
-
+    console.log("shivu");
+    console.log(songId);
+    console.log(option1);
     try {
         const song = await Song.findById(songId);
+        console.log(song);
 
         if (!song) {
             return res.status(404).send('Song not found');
         }
         if (option1 === '1') {
+            console.log("yes");
             song.likes++;
             song.dislikes = Math.max(0, song.dislikes - 1); 
         } else if (option2 === '1') {
@@ -664,10 +687,12 @@ app.post('/submit-options', async (req, res) => {
 
         await song.save(); 
         if (req.session.user) {
+            console.log("crct user");
             const userId = req.session.user._id;
             const user = await User.findById(userId);
 
             if (option1 === '1' && !user.likes.includes(song._id)) {
+                console.log("pushed");
                 user.likes.push(song._id);
                 user.dislikes = user.dislikes.filter(id => !id.equals(song._id));
             } else if (option2 === '1' && !user.dislikes.includes(song._id)) {
@@ -680,12 +705,34 @@ app.post('/submit-options', async (req, res) => {
 
             await user.save(); 
         }
+        console.log(song.likes);
         res.status(200).json({ likes: song.likes, dislikes: song.dislikes });
     } catch (error) {
         console.error('Error updating song or user:', error);
         res.status(500).send('Internal Server Error');
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 app.post('/signup', async (req, res) => {
