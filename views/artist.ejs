@@ -26,8 +26,27 @@
                 <input type="file" id="musicFile" name="musicFile" required>
             </div>
             
-            <button type="submit" class="submit-btn">Upload</button>
+            <button type="submit" class="submit-btn" id="s">Upload</button>
         </form>
     </div>
 </body>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const submitButton = document.getElementById('s');
+
+    submitButton.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent the form from submitting
+
+        alert("Song uploaded");
+        const form = submitButton.closest('form');
+        if (form) {
+            form.submit(); // Submit the form
+        }
+    });
+});
+
+    
+
+</script>
 </html>

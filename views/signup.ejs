@@ -47,6 +47,16 @@
 </div>
 
   <script>
+    function conditions(){
+      const name=document.getElementById('name');
+      if(name.length<2){
+        alert("name must be atleast 3 characters");
+        return false;
+
+      }
+      return true;
+      
+    }
     function toggleArtistFields() {
       const isArtist = document.getElementById('isArtist').checked;
       const artistFields = document.getElementById('artistFields');

@@ -59,8 +59,8 @@ const LoginSchema=({
         sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         message: String,
         createdAt: { type: Date, default: Date.now }
-    }]
-
+    }],
+    
 });
 const collections=new mongoose.model("users",LoginSchema);
 module.exports=collections;

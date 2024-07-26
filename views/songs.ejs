@@ -5,6 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Songs</title>
     <style>
+        .profile-circle {
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .profile-box {
+            display: none;
+            position: absolute;
+            width:60px;
+            height: 60px;
+            top: 60px;
+            left: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 200px;
+        }
+
+        .profile-box .profile-username {
+
+            font-size: 16px;
+            color: #333;
+        }
+        .profile-box .logout {
+            font-size: 14px;
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
       
         body {
             font-family: Arial, sans-serif;
@@ -194,6 +234,9 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+        .playlist-item.selected {
+        background-color: lightblue; /* Change this to your desired color */
+    }
 
         .playlist-item h3 {
             margin-bottom: 10px;
@@ -222,8 +265,45 @@
             border-radius: 5px;
             z-index: 1000;
         }
+       /* Styling for the composition box */
+       /* Styling for the percentage box */
+#percentage-box {
+    background-color: #f8f9fa; /* Light background color */
+    border: 1px solid #ddd;    /* Light border color */
+    border-radius: 8px;        /* Rounded corners */
+    padding: 20px;             /* Space inside the box */
+    margin: 20px auto;         /* Center the box with margin */
+    max-width: 600px;          /* Max width for responsiveness */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Styling for each percentage item */
+.percentage-item {
+    background-color: #ffffff; /* White background for each item */
+    border: 1px solid #ccc;    /* Light border for each item */
+    border-radius: 4px;        /* Slightly rounded corners */
+    padding: 10px;             /* Space inside each item */
+    margin-bottom: 10px;       /* Space between items */
+    font-size: 16px;           /* Font size */
+    color: #333;               /* Text color */
+    font-family: Arial, sans-serif; /* Font family */
+}
+
+/* Styling for the loading message */
+#loading-message {
+    font-size: 18px;
+    color: #007bff; /* Blue color */
+    text-align: center; /* Center align */
+    margin: 20px;
+}
+
+
+
+
+
     </style>
 </head>
+
 <body>
   
 <button id="fetchNotificationsBtn">Fetch Notifications</button>
@@ -262,6 +342,7 @@
     
     <script>
         
+        
 
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
@@ -293,14 +374,27 @@
     
 
     <h1>List of Songs</h1>
+    <div class="profile-circle" style="width: 50px; height: 50px; background-color: grey; border-radius: 50%; cursor: pointer;"></div>
+
+    <div class="profile-box">
+        <span class="profile-username"></span>
+        <a href="#" class="logout">Logout</a>
+    </div>
+
+
     <ul>
+       
         <% songs.forEach((song, index) => { %>
+            
+
             <li data-song-id="<%= song._id %>">
+               
                 <strong><%= song.name %></strong> by <%= song.artist %>
                 <audio controls class="custom-audio" id="audio_<%= index %>">
                     <source src="/audio/<%= song._id %>" type="audio/mp3">
-                    Your browser does not support the audio element.
+
                 </audio>
+
                 <div>
                     <form action="/submit-options" method="post" class="song-options-form">
                         <input type="hidden" name="songId" value="<%= song._id %>">
@@ -314,6 +408,10 @@
             </li>
         <% }); %>
     </ul>
+    <div id="percentage-box">
+        <!-- Content will be dynamically added here -->
+    </div>
+    <div id="loading-message">Loading...</div>
 
     <button id="prev">Previous</button>
     <button id="next">Next</button>
@@ -321,64 +419,282 @@
 
     <button id="created">created Playlists</button>
     <div id="playlistContainer"></div>
-   
-
-
     
-  
     <script>
-        
-         const friendsButton = document.getElementById("friends");
+
+
+// document.addEventListener('DOMContentLoaded', (event) => {
+            
+    //     const audioElements = document.querySelectorAll('.custom-audio');
+    //     audioElements.forEach(audio => {
+    //         audio.addEventListener('play', async(e) => {
+    //             const parentLi = e.target.closest('li');
+    //             const songId = parentLi.getAttribute('data-song-id');
+    //             console.log(`Currently playing song ID: ${songId}`);
+    //             try {
+    //                 const response = await fetch('/api/current-playing', {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json'
+    //                     },
+    //                     body: JSON.stringify({ songId })
+    //                 });
+
+    //                 const result = await response.json();
+    //                 if (result.success) {
+    //                     console.log('Current playing song updated successfully.');
+    //                 } else {
+    //                     console.error('Failed to update the current playing song.');
+    //                 }
+    //             } catch (error) {
+    //                 console.error('Error:', error);
+    //             }
+    //         });
+    //     });
+    // });
+    document.addEventListener('DOMContentLoaded', () => {
+    const audioElements = document.querySelectorAll('.custom-audio');
+
+    audioElements.forEach(audio => {
+        let intervalId; // Variable to store interval ID
+
+        audio.addEventListener('play', async (e) => {
+            const parentLi = e.target.closest('li');
+            const songId = parentLi.getAttribute('data-song-id');
+            
+            // Clear any existing interval
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+
+            // Set a new interval
+            intervalId = setInterval(async () => {
+                const status = audio.paused ? 'paused' : 'playing';
+
+                try {
+                    await fetch('/api/current-playing', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ songId, status }),
+                    });
+                } catch (error) {
+                    console.error('Error updating current playing song:', error);
+                }
+            }, 1000);
+        });
+
+        // Clear the interval when audio is paused or ended
+        audio.addEventListener('pause', () => {
+            clearInterval(intervalId);
+            // Update the status when paused
+            fetch('/api/current-playing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ songId: audio.closest('li').getAttribute('data-song-id'), status: 'paused' }),
+            });
+        });
+
+        audio.addEventListener('ended', () => {
+            clearInterval(intervalId);
+            // Update the status when ended
+            fetch('/api/current-playing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ songId: audio.closest('li').getAttribute('data-song-id'), status: 'ended' }),
+            });
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const audioElements = document.querySelectorAll('.custom-audio');
+
+    audioElements.forEach(audio => {
+        audio.addEventListener('play', async (e) => {
+            const parentLi = e.target.closest('li');
+            const songId = parentLi.getAttribute('data-song-id');
+            console.log(`Currently playing song ID: ${songId}`);
+
+            try {
+                const response = await fetch('/api/history',{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ songId })
+                });
+                const result = await response.json();
+                console.log(result);
+
+                if (result.success) {
+                    console.log('Song artist added to history.');
+                    updateTotalCount();
+                } else {
+                    console.error('Failed to add song artist to history.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+async function updateTotalCount() {
+    try {
+        const response = await fetch('/api/history/total-count', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const result = await response.json();
+        const percentageBox = document.getElementById('percentage-box');
+        const loadingMessage = document.getElementById('loading-message');
+
+        if (result.success) {
+            percentageBox.innerHTML = '';
+            loadingMessage.style.display = 'none'; 
+
+            
+            result.percentages.forEach((item, index) => {
+                const percentageItem = document.createElement('p');
+
+                percentageItem.className = 'percentage-item';
+                percentageItem.textContent = `Artist: ${item.artist}, Percentage: ${item.percentage}% ${item.names}`;
+                percentageBox.appendChild(percentageItem);
+            });
+
+            console.log('Total count of all artists\' plays:', result.percentages);
+        } else {
+            percentageBox.innerHTML = 'Failed to fetch total count.';
+            console.error('Failed to fetch total count.');
+        }
+    } catch (error) {
+        const percentageBox = document.getElementById('percentage-box');
+        percentageBox.innerHTML = 'Error fetching total count';
+        console.error('Error fetching total count:', error);
+    }
+}
+updateTotalCount();
+})
+
+
+document.addEventListener('DOMContentLoaded', function() {
+            const circle = document.querySelector('.profile-circle');
+            const profileBox = document.querySelector('.profile-box');
+            const logoutLink = profileBox.querySelector('.logout');
+
+            
+            async function fetchUsername() {
+                try {
+                    const response = await fetch('/api/user/name');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const username = data.name;
+                        circle.setAttribute('data-username', username);
+                        circle.textContent = username.charAt(0).toUpperCase();
+                        profileBox.querySelector('.profile-username').textContent = `Username: ${username}`;
+                    } else {
+                        console.error('Failed to fetch user name:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error fetching username:', error);
+                }
+            }
+
+            fetchUsername();
+
+            circle.addEventListener('click', function() {
+               
+                if (profileBox.style.display === 'none' || profileBox.style.display === '') {
+                    profileBox.style.display = 'block';
+                } else {
+                    profileBox.style.display = 'none';
+                }
+            });
+    logoutLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        console.log('Logging out...');
+        fetch('/logout', {
+            method: 'GET',
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/login'; // Redirect to login page after successful logout
+            } else {
+                console.error('Logout failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+});
+
+            
+            document.addEventListener('click', function(event) {
+                if (!circle.contains(event.target) && !profileBox.contains(event.target)) {
+                    profileBox.style.display = 'none';
+                }
+            });
+        const friendsButton = document.getElementById("friends");
         const friendsContainer = document.getElementById("friends-container");
         const partybutton=document.getElementById('pm');
         const partycontainer=document.getElementById("party-container");
- 
-       
+        let partyMode=false;
+        let isSender=false;
+        let isReciever=false;   
+        let senderPlaylistId = null;
+let receiverPlaylistId = null;     
 document.getElementById('fetchNotificationsBtn').addEventListener('click', async () => {
     try {
-        // Make a fetch request to your backend endpoint
+        
         const response = await fetch('/api/user/notifications', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                // Include any necessary authentication headers if required
             },
         });
 
-        // Parse JSON response
+        
         const data = await response.json();
 
-        // Handle response data (assuming data is an array of notifications)
+        
         const notificationsContainer = document.getElementById('notificationsContainer');
         notificationsContainer.innerHTML = ''; // Clear previous content
 
         if (data.success) {
-            // Iterate through notifications and display them
+            
             data.notifications.forEach(notification => {
-                // Create elements for notification message and accept button
+                
                 const notificationElement = document.createElement('div');
                 const messageElement = document.createElement('span');
                 const acceptButton = document.createElement('button');
-
-                // Set text content and attributes for accept button
                 messageElement.textContent = notification.message;
                 acceptButton.textContent = 'Accept';
                 acceptButton.addEventListener('click', async () => {
                     acceptButton.remove();
                     messageElement.textContent = 'Click a playlist';
-                    // You can add logic here to perform further actions on accept button click
-                    // such as sending a request to the backend
+                    // partyMode=true;
+                    // isReciever=true;
+                    // isSender=fasle;
+                    addPlaylistSelectionListeners();
+                    
                 });
 
-                // Append elements to notification element
+                
                 notificationElement.appendChild(messageElement);
                 notificationElement.appendChild(acceptButton);
 
-                // Append notification element to container
+                
                 notificationsContainer.appendChild(notificationElement);
             });
         } else {
-            // Handle error or display a message if no notifications
             notificationsContainer.textContent = 'No notifications found';
         }
     } catch (error) {
@@ -395,13 +711,19 @@ friendsButton.addEventListener('click', function() {
                         data.friends.forEach(friend => {
                             const friendDiv = document.createElement('div');
                             const party=document.createElement('button');
+                            const currentsong=document.createElement('button')
+                            currentsong.textContent="cuurent song";
                             party.textContent="Party Mode";
                             friendDiv.textContent = `Friend: ${friend}`;
                             console.log(friendDiv.textContent);
                             friendDiv.append(party);
+                            friendDiv.append(currentsong);
                             friendsContainer.appendChild(friendDiv);
                             party.addEventListener('click',function(){
                                 partymode(friend);
+                            })
+                            currentsong.addEventListener('click',function(){
+                                currentSong(friend);
                             })
 
                         });
@@ -462,7 +784,10 @@ friendsButton.addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Party Mode alert sent to ${friend}.`);
+            alert(`Party Mode alert sent to ${friend}. click a playlist`);
+            isSender=true;
+            addPlaylistSelectionListeners();
+
         } else {
             alert(`Failed to send Party Mode alert to ${friend}.`);
         }
@@ -471,8 +796,31 @@ friendsButton.addEventListener('click', function() {
         console.error('Error sending Party Mode alert:', error);
     });
 }
-        
-        
+
+    
+function currentSong(friend) {
+    console.log("Friend:", friend);
+
+    fetch(`/api/current-playing-getting?friend=${encodeURIComponent(friend)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Current playing song: ${data.songName}`);
+        } else {
+            alert(`Failed to get current playing song. ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching current playing song:', error);
+    });
+}
+
+
         
         function acceptFriendRequest(username) {
             fetch('/api/accept-friend-request', {
@@ -503,6 +851,7 @@ friendsButton.addEventListener('click', function() {
             const audios = document.querySelectorAll(".custom-audio");
             let currentIndex = null;
             let selectionMode = false;
+            
             const selectedSongs = new Set();
 
             function playAudio(index) {
@@ -652,10 +1001,9 @@ btnSavePlaylist.addEventListener("click", async function() {
 
         const data = await response.json();
         console.log('Playlist saved successfully:', data);
-        // Optionally update UI or perform other actions upon successful save
-    } catch (error) {
+    }
+     catch (error) {
         console.error('Error saving playlist:', error);
-        // Handle error scenario
     }
 
     modal.style.display = "none";
@@ -800,9 +1148,11 @@ window.addEventListener("click", function(event) {
         modal.style.display = "none";
     }
 });
+
+
 document.querySelectorAll("li[data-song-id]").forEach(item => {
     item.addEventListener("click", function() {
-        if (selectionMode) {
+        if (selectionMode||partyMode) {
             const songId = this.getAttribute("data-song-id");
             if (selectedSongs.has(songId)) {
                 selectedSongs.delete(songId);
@@ -814,6 +1164,83 @@ document.querySelectorAll("li[data-song-id]").forEach(item => {
         }
     });
 });
-
 });
+function addPlaylistSelectionListeners() {
+    const selectedPlaylists = new Set();
+    document.querySelectorAll(".playlist-item").forEach(item => {
+        item.addEventListener("click", function() {
+            const playlistId = this.getAttribute("data-playlist-id");
+            const playlistName = this.querySelector("h3").innerText; 
+    
+            if (isSender&&selectedPlaylists.has(playlistId)) {
+                // isSender=false;
+                senderPlaylistId=playlistId;
+                console.log(`sender playlist: ${playlistName}`);
+               
+            }
+            else if (selectedPlaylists.has(playlistId)) {
+                // isSender=false;
+                receiverPlaylistId=playlistId;
+                console.log(`Reciever playlist: ${playlistName}`);
+               
+            }
+            else {
+                selectedPlaylists.add(playlistId);
+                this.classList.add("selected");
+            }
+            
+            if (senderPlaylistId && receiverPlaylistId) {
+                    mergePlaylists(senderPlaylistId, receiverPlaylistId);
+                }
+        });
+    });
+}
+async function mergePlaylists(senderId, receiverId) {
+    try {
+        const [senderResponse, receiverResponse] = await Promise.all([
+            fetch(`/playlists/${senderId}/songs`),
+            fetch(`/playlists/${receiverId}/songs`)
+        ]);
+
+        if (!senderResponse.ok || !receiverResponse.ok) {
+            throw new Error('Failed to fetch playlists');
+        }
+
+        const senderSongs = await senderResponse.json();
+        const receiverSongs = await receiverResponse.json();
+
+        const mergedSongs = [...senderSongs, ...receiverSongs];
+
+        console.log('Merged Songs:', mergedSongs);
+        displayMergedPlaylist(mergedSongs);
+    } catch (error) {
+        console.error('Error merging playlists:', error);
+    }
+}
+
+function displayMergedPlaylist(songs) {
+    const mergedPlaylistContainer = document.getElementById("mergedPlaylistContainer");
+    mergedPlaylistContainer.innerHTML = ''; // Clear previous content
+
+    songs.forEach(song => {
+        const songItem = document.createElement('li');
+        songItem.classList.add('playlist-song');
+        songItem.innerHTML = `
+            <strong>${song.name}</strong> by ${song.artist}<br>
+            <audio controls>
+                <source src="/audio/${song._id}" type="audio/mp3">
+                Your browser does not support the audio element.
+            </audio>
+            <p>Duration: <span id="duration-${song._id}">--:--</span></p>
+            <hr>
+        `;
+        mergedPlaylistContainer.appendChild(songItem);
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+    
+});
+
+
+}
+
 </script>
